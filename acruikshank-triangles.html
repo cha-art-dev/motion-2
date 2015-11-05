@@ -26,11 +26,9 @@
 
     //loop through for each model and init the model with it's setup function:
     for(var i=0;i<setupFuncs.length;i++){
-      push()
       models[i] = setupFuncs[i](unit);//all sizing values: radius, magnitue, lenght, velocity, ... should be multiplied by a unit that can be controlled from the outside
-      pop()
     }
-    
+
 
   }
 
@@ -61,9 +59,7 @@
 
     for(var i=0;i<setupFuncs.length;i++){
       var ind = zs[i].i
-      push()
       drawFuncs[ind](models[ind],origins[ind],unit)
-      pop()
     }
 
   }
@@ -71,19 +67,20 @@
 //=========Individual Models
 
   function setupModel(unit){//every model has it's onw setupModel function
-    //no globals! all 'global' variables must be decalred within your setup function
-    //and should be namespaced as part of your individual model object (m below)
     var m = {
-      hue: random(0,1),
-      rad: 100
+      particles: [],
+      particleCounter: 0,
+      particleCount: 100
     };
-    //return the model object created in your setupModel function,
-    //it will be added to the models array
+
+    for (var i=0; i<m.particleCount; i++) {
+      m.particles[i] = { x:-1000, y:-1000 };
+    }
+
     return m;
   }
 
   function drawModel(m,o,unit){
-    //*** this was in the global draw function, include this kind of stuff in your individual drawModel function instead
     noStroke()
     colorMode(HSB, 1)
     //**
@@ -91,12 +88,38 @@
     fill(.5,1,.4,0.01);
     //rect(0,0,width,height);
 
-    fill(m.hue,.5,1,0)
-    ellipse(o.x,o.y,m.rad*unit,m.rad*unit)
+    var magnitude = random(.2,1)*unit;//note use of unit
+    var angle = random(0,TWO_PI);
 
+    if (random() < .025) {
+      var currentParticle = m.particles[m.particleCounter];
+      m.particleCounter = (m.particleCounter+1) % m.particleCount;
+      currentParticle.x = o.x + random(-100,100);
+      currentParticle.y = o.y + random(-100,100)
+    }
+
+    noStroke()
+    fill(.6,.5,.8,.2)
+    for (var i=0; i<m.particleCount; i++) {
+      var p1 = m.particles[i];
+      if (p1.x > -1000) {
+        tri(p1,m.particles[i+1],m.particles[i+2]);
+        tri(p1,m.particles[i+1],m.particles[i+3]);
+        tri(p1,m.particles[i+2],m.particles[i+3]);
+      }
+    }
+    // m.particles.forEach(function(particle) {
+    //   fill(0,0,.4,1);
+    //   ellipse(particle.x,particle.y, unit*5, unit*5)
+    // })
+
+    function tri(p1,p2,p3) {
+      if (p1 && p1.x > -1000 && p2 && p2.x > -1000 && p3 && p3.x > -1000)
+        triangle(p1.x,p1.y,p2.x,p2.y,p3.x,p3.y)
+    }
   }
 
- 
+
 
   //======== River's individual stuff
   function setupParticle(unit){//every model has it's onw setupModel function

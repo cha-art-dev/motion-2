@@ -26,11 +26,9 @@
 
     //loop through for each model and init the model with it's setup function:
     for(var i=0;i<setupFuncs.length;i++){
-      push()
       models[i] = setupFuncs[i](unit);//all sizing values: radius, magnitue, lenght, velocity, ... should be multiplied by a unit that can be controlled from the outside
-      pop()
     }
-    
+
 
   }
 
@@ -61,9 +59,7 @@
 
     for(var i=0;i<setupFuncs.length;i++){
       var ind = zs[i].i
-      push()
       drawFuncs[ind](models[ind],origins[ind],unit)
-      pop()
     }
 
   }
@@ -71,19 +67,32 @@
 //=========Individual Models
 
   function setupModel(unit){//every model has it's onw setupModel function
-    //no globals! all 'global' variables must be decalred within your setup function
-    //and should be namespaced as part of your individual model object (m below)
     var m = {
       hue: random(0,1),
-      rad: 100
+      rad: 100,
+      particles: [],
+      particleCounter: 0,
+      particleCount: 100
     };
-    //return the model object created in your setupModel function,
-    //it will be added to the models array
+
+    for (var i=0; i<m.particleCount; i++) {
+      var magnitude = random(0,2)*unit;//note use of unit
+      var angle = random(0,TWO_PI);
+      m.particles[i] = {
+       x:-1000,
+       y:-1000,
+       vx: magnitude*cos(angle),
+       vy: magnitude*sin(angle),
+       r: (2+8*pow(random(),32))*unit,//note use of unit
+       hue: random(-.1,0.2),
+       curl: 0
+      };
+    }
+
     return m;
   }
 
   function drawModel(m,o,unit){
-    //*** this was in the global draw function, include this kind of stuff in your individual drawModel function instead
     noStroke()
     colorMode(HSB, 1)
     //**
@@ -91,12 +100,33 @@
     fill(.5,1,.4,0.01);
     //rect(0,0,width,height);
 
-    fill(m.hue,.5,1,0)
-    ellipse(o.x,o.y,m.rad*unit,m.rad*unit)
+    var magnitude = random(0,2)*unit;//note use of unit
+    var angle = random(0,TWO_PI);
 
+    var currentParticle = m.particles[m.particleCounter];
+    m.particleCounter = (m.particleCounter+1) % m.particleCount;
+    currentParticle.x = o.x;//320//mouseX;
+    currentParticle.y = o.y;//100//mouseY;
+    currentParticle.vx = magnitude*cos(angle)
+    currentParticle.vy = magnitude*sin(angle)
+    currentParticle.curl = pow(random(-1,1),5)
+    m.particles.forEach(drawParticle);
+
+    //move all functions into your drawModel function (to make my job easier and avoid naming conflicts)
+    function calculateParticle(particle) {
+      particle.x += particle.vx
+      particle.y += particle.vy
+      particle.vx += particle.curl*particle.vy
+      particle.vy += -particle.curl*particle.vx
+    }
+    function drawParticle(particle) {
+      calculateParticle(particle)
+      fill(particle.hue,.2,0,.3)//hue,sat,bright,alpha
+      ellipse(particle.x,particle.y,particle.r,particle.r)
+    }
   }
 
- 
+
 
   //======== River's individual stuff
   function setupParticle(unit){//every model has it's onw setupModel function

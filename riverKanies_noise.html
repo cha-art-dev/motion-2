@@ -8,11 +8,11 @@
 
   //may need to scale models based on different unit values
   //just assume all same scale for now
-  var unit = 2;
+  var unit = .5;
 
   o = {x:320,y:320};
   rad = 200;
-  angle = .2;
+  t = .2;
   tilt = .2;
 
 //========= Parent Model
@@ -21,8 +21,8 @@
 
     //call all setup methods here
     models = [];
-    setupFuncs = [setupParticle,setupModel];//everyone's setup functions will go here
-    drawFuncs = [drawParticle,drawModel];//everyone's draw functions will go here
+    setupFuncs = [setupParticle,setupModel,setupTri,setupQuad];//everyone's setup functions will go here
+    drawFuncs = [drawParticle,drawModel,drawTri,drawQuad];//everyone's draw functions will go here
 
     //loop through for each model and init the model with it's setup function:
     for(var i=0;i<setupFuncs.length;i++){
@@ -33,37 +33,57 @@
     
 
   }
+  function noisify(x){
+    var noisy = o.y+noise((1000+x+t)/300)*IMAGE_HEIGHT/3//+noise(sin((x+t)/100)*10 )*40
+    return noisy
+  }
 
   function draw() {
-    clear();
+    colorMode(HSB, 1)
+    //clear();
+    background(.15,.5,.4,0)
 
     var origins = [];
-    angle += .002;
-    var zs = []
+    t ++;
+    //noiseSeed(t)
+    //var zs = []
     for(var i=0;i<setupFuncs.length;i++){
-      var rot = angle + i*TWO_PI/setupFuncs.length
+      //var rot = angle + i*TWO_PI/setupFuncs.length
+      var x = IMAGE_WIDTH/setupFuncs.length*(i+0.5)
       origins[i] = {
-        x:o.x+rad*cos(rot),
-        y:o.y+rad*sin(rot)*tilt,
-        rot:rot
+        x:x,
+        y:noisify(x),//o.y+noise((1000+x+t)/300)*IMAGE_HEIGHT/3+noise,
+        rot:PI/2
       };
-      //angle+=TWO_PI/setupFuncs.length;
-      zs[i] = {i:i,z:sin(rot)}
     }
 
-    function sortNumber(a,b) {
-        return a.z - b.z;
+    //draw background
+
+    stroke(.5,.5,.2,0)
+    var strokes = 100
+    strokeWeight(IMAGE_WIDTH/strokes)
+    for(var i=0;i<strokes;i++){
+      var x = (0.5+i)*IMAGE_WIDTH/strokes
+      //var y = noisify(x)
+      //stroke(.5,.5,.2,0)
+      line(x,IMAGE_HEIGHT,x,noisify(x))//o.y+noise((1000+x+t)/300)*IMAGE_HEIGHT/3)
+      //stroke(.2,.5,.3,0)
+      //line(x,IMAGE_HEIGHT,x,noisify(x+IMAGE_WIDTH)+100)
     }
-
-    zs.sort(sortNumber)
-
-    console.log
 
     for(var i=0;i<setupFuncs.length;i++){
-      var ind = zs[i].i
+      //var ind = zs[i].i
       push()
-      drawFuncs[ind](models[ind],origins[ind],unit)
+      drawFuncs[i](models[i],origins[i],unit)
       pop()
+    }
+
+    stroke(.4,.5,.3,0)
+    var strokes = 100
+    strokeWeight(IMAGE_WIDTH/strokes)
+    for(var i=0;i<strokes;i++){
+      var x = (0.5+i)*IMAGE_WIDTH/strokes
+      line(x,IMAGE_HEIGHT,x,noisify(x+IMAGE_WIDTH)+100)
     }
 
   }
@@ -162,6 +182,58 @@
     }
   }
 
+  function setupTri(unit){//every model has it's onw setupModel function
+    //no globals! all 'global' variables must be decalred within your setup function
+    //and should be namespaced as part of your individual model object (m below)
+    var m = {
+      hue: random(0,1),
+      rad: 100*unit
+    };
+    //return the model object created in your setupModel function,
+    //it will be added to the models array
+    return m;
+  }
+
+  function drawTri(m,o,unit){
+    //*** this was in the global draw function, include this kind of stuff in your individual drawModel function instead
+    noStroke()
+    colorMode(HSB, 1)
+    //**
+
+    fill(.5,1,.4,0.01);
+    //rect(0,0,width,height);
+
+    fill(m.hue,.5,1,0)
+    triangle(o.x,o.y-m.rad,o.x+m.rad*cos(PI/6),o.y+m.rad*sin(PI/6),o.x-m.rad*cos(PI/6),o.y+m.rad*sin(PI/6))
+
+  }
+
+
+  function setupQuad(unit){//every model has it's onw setupModel function
+    //no globals! all 'global' variables must be decalred within your setup function
+    //and should be namespaced as part of your individual model object (m below)
+    var m = {
+      hue: random(0,1),
+      rad: 100*unit
+    };
+    //return the model object created in your setupModel function,
+    //it will be added to the models array
+    return m;
+  }
+
+  function drawQuad(m,o,unit){
+    //*** this was in the global draw function, include this kind of stuff in your individual drawModel function instead
+    noStroke()
+    colorMode(HSB, 1)
+    //**
+
+    fill(.5,1,.4,0.01);
+    //rect(0,0,width,height);
+
+    fill(m.hue,.5,1,0)
+    //triangle(o.x,o.y-m.rad,o.x+m.rad*cos(PI/6),o.y+m.rad*sin(PI/6),o.x-m.rad*cos(PI/6),o.y+m.rad*sin(PI/6))
+    quad(o.x-sin(o.rot)*m.rad,o.y-m.rad,o.x+sin(o.rot)*m.rad,o.y-m.rad,o.x-sin(o.rot)*m.rad,o.y+m.rad,o.x+sin(o.rot)*m.rad,o.y+m.rad)
+  }
 
 
   // =============== STOP WORKING HERE ==========================
